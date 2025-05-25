@@ -105,6 +105,8 @@ function PaymentType() {
   };
 
   const paymentDetails = getPaymentDetails();
+  const isPaymentPage = location.pathname === "/payment";
+  const isSuccessPage = location.pathname === "/success-order";
 
   return (
     <>
@@ -133,14 +135,25 @@ function PaymentType() {
 
         {/* Mobile Stepper */}
         <div className="sm:hidden flex items-center text-gray-400 mb-6">
-          <i className="ri-radio-button-line text-[30px] text-[#3ECF4C]"></i>
+          {/* Step 1: Always completed on payment page */}
+          <i className="ri-checkbox-circle-fill text-[30px] text-[#3ECF4C]"></i>
           <span className="text-black text-[12px] mr-2 my-auto">Pilih Metode</span>
           <div className="w-[44px] h-[3px] my-auto bg-[#3A354161]"></div>
-          <i className="ri-radio-button-line text-[30px] text-[#3ECF4C]"></i>
-          <span className="text-black text-[12px] mr-2 my-auto">Bayar</span>
+
+          {/* Step 2: Bayar */}
+          {isPaymentPage ? (
+            <i className="ri-radio-button-line text-[30px] text-[#3ECF4C]"></i>
+          ) : isSuccessPage ? (
+            <i className="ri-checkbox-circle-fill text-[30px] text-[#3ECF4C]"></i>
+          ) : (
+            <i className="ri-radio-button-line text-[30px] text-gray-300"></i>
+          )}
+          <span className={`text-[12px] mr-2 my-auto ${isPaymentPage ? "text-black" : isSuccessPage ? "text-black" : "text-gray-300"}`}>Bayar</span>
           <div className="w-[44px] h-[3px] bg-[#3A354161] my-auto"></div>
-          <i className="ri-radio-button-line text-[30px]"></i>
-          <span className="text-[12px] my-auto">Selesai</span>
+
+          {/* Step 3: Selesai */}
+          {isSuccessPage ? <i className="ri-radio-button-line text-[30px] text-[#3ECF4C]"></i> : <i className="ri-radio-button-line text-[30px] text-gray-300"></i>}
+          <span className={`text-[12px] my-auto ${isSuccessPage ? "text-black" : "text-gray-300"}`}>Selesai</span>
         </div>
 
         <div className="sm:hidden block w-full sm:w-[30%] py-5 order-1 sm:order-2">

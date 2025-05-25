@@ -38,7 +38,7 @@ function Navbar() {
         </div>
       </header>
 
-      <div className="pt-[60px] background-color">
+      <div className="pt-[60px] bg-[#f8f2ea]">
         <Outlet />
       </div>
     </div>
