@@ -7,7 +7,7 @@ import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 function PaymentType() {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const [timeLeft, setTimeLeft] = useState(2 * 60); // 20 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(20 * 60); // 20 minutes in seconds
   const [paymentFailed, setPaymentFailed] = useState(false);
 
   const [expandedCategory, setExpandedCategory] = useState(null);
@@ -102,6 +102,44 @@ function PaymentType() {
       accountName: "videobelajar",
       type: "Virtual Account",
     };
+  };
+
+  const handlePayment = async () => {
+    try {
+      // Data yang akan dikirim ke API
+      const paymentData = {
+        productId: productData.id,
+        productName: productData.title,
+        price: totalPayment,
+        paymentMethod: paymentMethod,
+        timestamp: new Date().toISOString(),
+        status: "completed", // Status setelah pembayaran
+      };
+
+      // Kirim data ke API
+      const response = await fetch("https://68385dcb2c55e01d184d0632.mockapi.io/api/videobelajar/classUsers", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(paymentData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Gagal menyimpan data pembayaran");
+      }
+
+      // Navigasi ke halaman sukses jika berhasil
+      navigate("/success-order", {
+        state: {
+          paymentData: paymentData,
+        },
+      });
+    } catch (error) {
+      console.error("Error:", error);
+      // Tampilkan pesan error ke pengguna
+      alert("Terjadi kesalahan saat memproses pembayaran");
+    }
   };
 
   const paymentDetails = getPaymentDetails();
@@ -258,7 +296,7 @@ function PaymentType() {
                   <button onClick={() => navigate("/change-payment", { state })} className="w-full bg-white text-green-500 border-2 border-green-500 hover:bg-green-50 font-semibold py-3 rounded-lg transition">
                     Ganti Pembayaran
                   </button>
-                  <button className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-lg transition" onClick={() => navigate("/success-order")}>
+                  <button className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-lg transition" onClick={handlePayment}>
                     Bayar Sekarang
                   </button>
                 </div>

@@ -1,9 +1,10 @@
-import { Outlet, useLocation } from "react-router";
+import { Outlet, useLocation, useNavigate } from "react-router";
 import { FaCheckCircle } from "react-icons/fa";
 import { RiRadioButtonLine } from "react-icons/ri";
 
 function Navbar() {
   const location = useLocation();
+  const Navigate = useNavigate();
 
   const isOrderPage = location.pathname === "/order";
   const isPaymentPage = location.pathname === "/payment";
@@ -12,7 +13,7 @@ function Navbar() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm px-4 sm:px-20 flex justify-between items-center h-[60px]">
-        <h1 className="text-orange-500 text-xl font-bold">videobelajar</h1>
+        <img className="h-[50px] w-[200px] curcor-pointer" src="./videobelajar.png" onClick={() => Navigate("/home")} />
         <div className="hidden sm:flex items-center text-gray-400">
           {/* Step 1: Pilih Metode */}
           <div className="flex items-center">

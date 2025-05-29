@@ -9,6 +9,8 @@ import PaymentType from "./pages/Order/component/paymentType.jsx";
 import ChangePaymentMethod from "./pages/Order/component/ChangePaymentMethod.jsx";
 import SuccessPage from "./pages/Order/component/SuccessOrder.jsx";
 import OrderList from "./pages/Home/component/OrderList/OrderList.jsx";
+import List from "./pages/Home/component/OrderList/List.jsx";
+import ClassList from "./pages/Home/component/OrderList/ClassList.jsx";
 
 export default function Router() {
   return (
@@ -18,15 +20,16 @@ export default function Router() {
         <Route element={<Navbar />}>
           <Route path="/home" element={<Home />} />
           <Route path="/detail" element={<Detail />} />
+          <Route path="/list" element={<List />}>
+            <Route path="order-list" element={<OrderList />} />
+            <Route path="class-list" element={<ClassList />} />
+          </Route>
         </Route>
         <Route element={<NavbarOrder />}>
           <Route path="/order" element={<Order />} />
           <Route path="/payment" element={<PaymentType />} />
           <Route path="/change-payment" element={<ChangePaymentMethod />} />
           <Route path="/success-order" element={<SuccessPage />} />
-        </Route>
-        <Route element={<Navbar />}>
-          <Route path="/order-list" element={<OrderList />} />
         </Route>
       </Routes>
     </BrowserRouter>

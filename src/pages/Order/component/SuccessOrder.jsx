@@ -47,7 +47,7 @@ function SuccessPage() {
               <p className="text-gray-600 mb-6">Silakan cek email kamu untuk informasi lebih lanjut. Hubungi kami jika ada kendala.</p>
 
               {/* Action Button */}
-              <button onClick={() => navigate("/order-list")} className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-2.5 rounded-lg transition">
+              <button onClick={() => navigate("/list/order-list")} className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-2.5 rounded-lg transition">
                 Lihat Detail Pesanan
               </button>
             </div>
