@@ -33,7 +33,7 @@ const ClassList = () => {
           invoice: item.invoice || `HEL/VI/${Math.floor(1000 + Math.random() * 9000)}`,
           time: item.time instanceof Date ? item.time : new Date(item.time || item.createdAt),
           status: item.status || "ongoing",
-          title: item.courseTitle || "Kelas Belum Diberi Judul",
+          title: item.productName || "Kelas Belum Diberi Judul",
           price: item.price || 0,
           image: item.image || "/avatar/satu.png",
           total_payment: item.totalPayment || item.price || 0,

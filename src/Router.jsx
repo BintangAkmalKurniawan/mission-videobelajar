@@ -18,8 +18,8 @@ export default function Router() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route element={<Navbar />}>
-          <Route path="/home" element={<Home />} />
-          <Route path="/detail" element={<Detail />} />
+          <Route path="home" element={<Home />} />
+          <Route path="detail" element={<Detail />} />
           <Route path="/list" element={<List />}>
             <Route path="order-list" element={<OrderList />} />
             <Route path="class-list" element={<ClassList />} />

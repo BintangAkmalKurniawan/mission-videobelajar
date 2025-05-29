@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router";
+import { NavLink, Outlet } from "react-router";
 
 function Navbar() {
   const [showSidebar, setShowSidebar] = useState(false);
-  const Navigate = useNavigate;
 
   const toggleSidebar = () => {
     setShowSidebar(!showSidebar);
@@ -18,7 +17,9 @@ function Navbar() {
   return (
     <>
       <header className={`fixed top-0 left-0 right-0 z-50 sm:z-50 bg-white shadow-sm px-4 sm:px-20 flex justify-between sm:items-center ${sideActive} transition duration-300 h-[60px]`}>
-        <img className="h-[50px] w-[200px] curcor-pointer" src="./videobelajar.png" onClick={() => Navigate("/home")} />
+        <NavLink to="/home">
+          <img className="h-[50px] w-[200px] curcor-pointer" src="./videobelajar.png" />
+        </NavLink>
         <div className="flex sm:items-center pt-4 sm:pt-0 space-x-4 overflow-hidden sm:overflow-visible">
           <button>
             <span className="text-sm text-gray-600 hidden sm:inline" onClick={toggleSidebar2}>
