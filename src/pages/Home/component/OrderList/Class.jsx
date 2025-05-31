@@ -1,54 +1,21 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchClasses, deleteClass } from "../../../../redux/classesSlice.js";
 
 const statusColor = {
   completed: "text-green-600 bg-green-100",
   ongoing: "text-yellow-600 bg-yellow-100",
 };
 
-const OrderList = () => {
-  const URL = "https://68385dcb2c55e01d184d0632.mockapi.io/api/videobelajar/classUsers";
-
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const ClassList = () => {
+  const dispatch = useDispatch();
+  const { items: data, status, error } = useSelector((state) => state.classes);
 
   const navbar = ["Semua Kelas", "ongoing", "completed"];
   const [selectedCategory, setSelectedCategory] = useState("Semua Kelas");
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const itemsPerPage = 4;
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(URL);
-        // Pastikan response.data adalah array
-        if (!Array.isArray(response.data)) {
-          throw new Error("Format data tidak valid");
-        }
-
-        const transformedData = response.data.map((item) => ({
-          id: item.id,
-          invoice: item.invoice || `HEL/VI/${Math.floor(1000 + Math.random() * 9000)}`,
-          time: item.time instanceof Date ? item.time : new Date(item.time || item.createdAt),
-          status: item.status || "ongoing",
-          title: item.productName || "Kelas Belum Diberi Judul",
-          price: item.price || 0,
-          image: item.image || "/avatar/satu.png",
-          total_payment: item.totalPayment || item.price || 0,
-        }));
-        setData(transformedData);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
 
   // Filter data
   const filteredData = data.filter((item) => {
@@ -72,8 +39,14 @@ const OrderList = () => {
     }
   };
 
-  if (loading) return <div className="text-center py-10">Memuat data...</div>;
-  if (error) return <div className="text-center py-10 text-red-500">Error: {error}</div>;
+  const handleDelete = (id) => {
+    if (window.confirm("Apakah Anda yakin ingin menghapus kelas ini?")) {
+      dispatch(deleteClass(id));
+    }
+  };
+
+  if (status === "loading") return <div className="text-center py-10">Memuat data...</div>;
+  if (status === "failed") return <div className="text-center py-10 text-red-500">Error: {error}</div>;
 
   return (
     <div className="bg-white sm:w-[100%] w-full h-full p-5 border-2 border-gray-200 rounded-lg">
@@ -129,6 +102,9 @@ const OrderList = () => {
                 </span>
               </p>
               <p className={`sm:ml-auto px-3 py-1 rounded-lg w-fit ${statusColor[order.status]}`}>{getStatusDisplay(order.status)}</p>
+              <button onClick={() => handleDelete(order.id)} className="ml-2 text-red-500 hover:text-red-700">
+                <i className="ri-delete-bin-line"></i>
+              </button>
             </div>
             <div className="flex flex-col sm:flex-row w-full bg-white p-4 border-b-2 border-[#3A35411F] items-center sm:items-center gap-4">
               <div className="flex items-center gap-4 w-full sm:w-auto">
@@ -186,4 +162,4 @@ const OrderList = () => {
   );
 };
 
-export default OrderList;
+export default ClassList;

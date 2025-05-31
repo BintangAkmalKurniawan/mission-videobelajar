@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchClasses, deleteClass } from "../../../../redux/classesSlice.js";
 
 const statusColor = {
   completed: "text-green-600 bg-green-100",
@@ -7,11 +8,8 @@ const statusColor = {
 };
 
 const ClassList = () => {
-  const URL = "https://68385dcb2c55e01d184d0632.mockapi.io/api/videobelajar/classUsers";
-
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const dispatch = useDispatch();
+  const { items: data, status, error } = useSelector((state) => state.classes);
 
   const navbar = ["Semua Kelas", "ongoing", "completed"];
   const [selectedCategory, setSelectedCategory] = useState("Semua Kelas");
@@ -20,35 +18,8 @@ const ClassList = () => {
   const itemsPerPage = 4;
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(URL);
-        // Pastikan response.data adalah array
-        if (!Array.isArray(response.data)) {
-          throw new Error("Format data tidak valid");
-        }
-
-        const transformedData = response.data.map((item) => ({
-          id: item.id,
-          invoice: item.invoice || `HEL/VI/${Math.floor(1000 + Math.random() * 9000)}`,
-          time: item.time instanceof Date ? item.time : new Date(item.time || item.createdAt),
-          status: item.status || "ongoing",
-          title: item.courseTitle || "Kelas Belum Diberi Judul",
-          price: item.price || 0,
-          image: item.image || "/avatar/satu.png",
-          total_payment: item.totalPayment || item.price || 0,
-        }));
-        setData(transformedData);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+    dispatch(fetchClasses());
+  }, [dispatch]);
 
   // Filter data
   const filteredData = data.filter((item) => {
@@ -72,8 +43,14 @@ const ClassList = () => {
     }
   };
 
-  if (loading) return <div className="text-center py-10">Memuat data...</div>;
-  if (error) return <div className="text-center py-10 text-red-500">Error: {error}</div>;
+  const handleDelete = (id) => {
+    if (window.confirm("Apakah Anda yakin ingin menghapus kelas ini?")) {
+      dispatch(deleteClass(id));
+    }
+  };
+
+  if (status === "loading") return <div className="text-center py-10">Memuat data...</div>;
+  if (status === "failed") return <div className="text-center py-10 text-red-500">Error: {error}</div>;
 
   return (
     <div className="bg-white sm:w-[100%] w-full h-full p-5 border-2 border-gray-200 rounded-lg">
@@ -107,49 +84,77 @@ const ClassList = () => {
           <i className="ri-search-line absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
         </div>
       </div>
-
       {/* Daftar Kelas */}
+      // ... (import dan bagian awal komponen tetap sama)
       {currentItems.length > 0 ? (
-        currentItems.map((order) => (
-          <div key={order.id} className="mt-4 bg-white border-2 border-gray-200 rounded-lg text-[15px] text-[#333333AD]">
-            <div className="flex flex-col sm:flex-row w-full bg-[#3A35411F] p-4 gap-2 sm:items-center">
-              <p>
-                No: Invoice <span className="font-semibold text-blue-600">{order.invoice}</span>
-              </p>
-              <p className="sm:ml-[50px] text-[17px]">
-                Waktu:{" "}
-                <span className="font-semibold text-green-600">
-                  {order.time.toLocaleDateString("id-ID", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-              </p>
-              <p className={`sm:ml-auto px-3 py-1 rounded-lg w-fit ${statusColor[order.status]}`}>{getStatusDisplay(order.status)}</p>
-            </div>
-            <div className="flex flex-col sm:flex-row w-full bg-white p-4 border-b-2 border-[#3A35411F] items-center sm:items-center gap-4">
-              <div className="flex items-center gap-4 w-full sm:w-auto">
-                <img src={order.image} alt={order.title} className="w-[50px] h-[50px] rounded-[30%] object-cover" />
-                <p className="text-black text-[17px]">{order.title}</p>
+        currentItems.map((classItem) => {
+          const isCompleted = classItem.status === "completed";
+          // Progress sudah dihitung di Redux slice
+          const progress = classItem.progress;
+
+          return (
+            <div key={classItem.id} className="mt-4 bg-white border-2 border-gray-200 rounded-lg mb-4">
+              {/* Header dengan info modul dan status */}
+              <div className="flex justify-between items-center bg-[#E2FCD933] px-3 py-2 border-b">
+                <p className="text-sm font-bold">
+                  {classItem.completedModules} / {classItem.totalModules} Modul Terselesaikan
+                </p>
+                <span className={`text-sm px-2 py-1 rounded-full font-semibold ${isCompleted ? "bg-green-100 text-green-600" : "bg-yellow-100 text-yellow-600"}`}>{isCompleted ? "Selesai" : "Sedang Berjalan"}</span>
               </div>
-              <div className="sm:ml-auto text-right w-full sm:w-auto">
-                <p className="text-[#333333AD] text-[17px]">Harga</p>
-                <p className="text-black text-[17px]">Rp. {order.price.toLocaleString("id-ID")}</p>
+
+              {/* Konten utama kelas */}
+              <div className="flex gap-4 px-5 py-4">
+                <img src={classItem.image} alt={classItem.title} className="w-24 h-24 rounded" />
+                <div className="flex-1">
+                  <h2 className="text-lg font-semibold mt-1">{classItem.title}</h2>
+                  <p className="text-sm text-gray-500">Mulai transformasi dengan instruktur profesional, harga yang terjangkau, dan kurikulum terbaik</p>
+                  <div className="flex items-center mt-2 text-sm text-gray-700 gap-2">
+                    <span className="font-semibold">{classItem.instructorName}</span>
+                    <span>• {classItem.instructorJob}</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600 mt-1 gap-4">
+                    <span>
+                      <i className="ri-book-line text-[20px]"></i> {classItem.totalModules} Modul
+                    </span>
+                    <span>
+                      <i className="ri-time-line text-[20px]"></i> {classItem.duration} Menit
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Progress bar dan aksi */}
+              <div className="mt-2 flex items-center px-10 bg-[#E2FCD933] py-3 border-t justify-between">
+                <div className="flex items-center">
+                  <p className="text-sm">
+                    Progres Kelas: <span className="font-semibold">{progress}%</span>
+                  </p>
+                  <div className="h-1 w-[210px] bg-red-200 rounded-full mx-4">
+                    <div className="h-1 bg-red-500 rounded-full" style={{ width: `${progress}%` }}></div>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  {isCompleted ? (
+                    <>
+                      <button className="border border-green-500 text-green-500 px-3 py-2 rounded-md text-sm font-medium">Unduh Sertifikat</button>
+                      <button className="bg-green-500 text-white px-3 py-2 rounded-md text-sm font-medium">Lihat Detail Kelas</button>
+                    </>
+                  ) : (
+                    <button className="bg-green-500 text-white px-3 py-2 rounded-md text-sm font-medium">Lanjutkan Pembelajaran</button>
+                  )}
+                  <button onClick={() => handleDelete(classItem.id)} className="ml-2 text-red-500 hover:text-red-700">
+                    <i className="ri-delete-bin-line"></i>
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row w-full bg-[#3A35411F] p-4 items-center sm:justify-between">
-              <p>Total Pembayaran</p>
-              <p className="text-[#3ECF4C] text-[18px] px-3 py-1 rounded-lg">Rp. {order.total_payment.toLocaleString("id-ID")}</p>
-            </div>
-          </div>
-        ))
+          );
+        })
       ) : (
         <div className="text-center py-10 text-gray-500">Tidak ada data yang ditemukan</div>
       )}
-
+      // ... (bagian lainnya tetap sama)
       {/* Pagination */}
       {filteredData.length > 0 && (
         <div className="flex justify-center mt-10 mb-5 overflow-x-auto">

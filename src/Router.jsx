@@ -11,6 +11,7 @@ import SuccessPage from "./pages/Order/component/SuccessOrder.jsx";
 import OrderList from "./pages/Home/component/OrderList/OrderList.jsx";
 import List from "./pages/Home/component/OrderList/List.jsx";
 import ClassList from "./pages/Home/component/OrderList/ClassList.jsx";
+import Profile from "./pages/Home/component/Profile/Profile.jsx";
 
 export default function Router() {
   return (
@@ -23,6 +24,7 @@ export default function Router() {
           <Route path="/list" element={<List />}>
             <Route path="order-list" element={<OrderList />} />
             <Route path="class-list" element={<ClassList />} />
+            <Route path="profile" element={<Profile />} />
           </Route>
         </Route>
         <Route element={<NavbarOrder />}>
