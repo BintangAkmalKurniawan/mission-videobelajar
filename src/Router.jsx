@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router";
 import Login from "./pages/Login/Login.jsx";
 import Navbar from "./pages/Home/component/Navbar.jsx";
 import NavbarOrder from "./pages/Order/component/Navbar.jsx";
+import NavbarVideo from "./pages/ClassCourses/Navbar.jsx";
 import Home from "./pages/Home/Home.jsx";
 import Detail from "./pages/Home/component/Detail/Detail.jsx";
 import Order from "./pages/Order/Order.jsx";
@@ -12,6 +13,7 @@ import OrderList from "./pages/Home/component/OrderList/OrderList.jsx";
 import List from "./pages/Home/component/OrderList/List.jsx";
 import ClassList from "./pages/Home/component/OrderList/ClassList.jsx";
 import Profile from "./pages/Home/component/Profile/Profile.jsx";
+import VideoContent from "./pages/ClassCourses/VideoContent.jsx";
 
 export default function Router() {
   return (
@@ -32,6 +34,9 @@ export default function Router() {
           <Route path="/payment" element={<PaymentType />} />
           <Route path="/change-payment" element={<ChangePaymentMethod />} />
           <Route path="/success-order" element={<SuccessPage />} />
+        </Route>
+        <Route element={<NavbarVideo />}>
+          <Route path="/class/:classId" element={<VideoContent />} />
         </Route>
       </Routes>
     </BrowserRouter>

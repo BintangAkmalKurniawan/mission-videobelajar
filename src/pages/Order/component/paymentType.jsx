@@ -7,12 +7,11 @@ import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 function PaymentType() {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const [timeLeft, setTimeLeft] = useState(20 * 60); // 20 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(20 * 60);
   const [paymentFailed, setPaymentFailed] = useState(false);
-
   const [expandedCategory, setExpandedCategory] = useState(null);
+  const API_URL = "https://68385dcb2c55e01d184d0632.mockapi.io/api/videobelajar/classUsers";
 
-  // Handle missing data
   if (!state) {
     return (
       <div className="p-4 text-center mt-[60px]">
@@ -26,7 +25,6 @@ function PaymentType() {
 
   const { productData, paymentMethod, totalPayment, adminFee } = state;
 
-  // Format price function
   const formatPrice = (amount) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -37,7 +35,6 @@ function PaymentType() {
       .replace("Rp", "Rp ");
   };
 
-  // Timer countdown effect
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft((prevTime) => {
@@ -53,7 +50,6 @@ function PaymentType() {
     return () => clearInterval(timer);
   }, []);
 
-  // Handle payment failure
   useEffect(() => {
     if (paymentFailed) {
       const timer = setTimeout(() => {
@@ -64,14 +60,12 @@ function PaymentType() {
     }
   }, [paymentFailed, navigate]);
 
-  // Format time display
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Payment method details
   const getPaymentDetails = () => {
     const bankMethods = {
       "Bank BCA": { accountNumber: "11738 081234567890", accountName: "videobelajar" },
@@ -106,18 +100,29 @@ function PaymentType() {
 
   const handlePayment = async () => {
     try {
-      // Data yang akan dikirim ke API
       const paymentData = {
         productId: productData.id,
-        productName: productData.title,
-        price: totalPayment,
+        productName: productData.title || "Kelas Belum Diberi Judul",
+        price: totalPayment || productData.basePrice * 1000,
         paymentMethod: paymentMethod,
-        timestamp: new Date().toISOString(),
-        status: "completed", // Status setelah pembayaran
+        createdAt: new Date().toISOString(),
+        status: "ongoing",
+        completed: false,
+        completedModules: 0,
+        totalModules: productData.totalModules || 3,
+        modules: productData.modules || generateDefaultModules(productData),
+        instructorName: productData.instructorName || "Instruktur",
+        instructorJob: productData.instructorJob || "Profesional",
+        image: productData.image || "/avatar/satu.png",
+        duration: productData.duration || 0,
+        rating: productData.rating || 3.5,
+        reviewCount: productData.reviewCount || 86,
+        description: productData.description || "Pelajari dan praktikkan skill teknis dalam berbagai industri",
+        invoice: `HEL/VI/${Math.floor(1000 + Math.random() * 9000)}`,
+        totalPayment: totalPayment,
       };
 
-      // Kirim data ke API
-      const response = await fetch("https://68385dcb2c55e01d184d0632.mockapi.io/api/videobelajar/classUsers", {
+      const response = await fetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -129,7 +134,6 @@ function PaymentType() {
         throw new Error("Gagal menyimpan data pembayaran");
       }
 
-      // Navigasi ke halaman sukses jika berhasil
       navigate("/success-order", {
         state: {
           paymentData: paymentData,
@@ -137,10 +141,35 @@ function PaymentType() {
       });
     } catch (error) {
       console.error("Error:", error);
-      // Tampilkan pesan error ke pengguna
       alert("Terjadi kesalahan saat memproses pembayaran");
     }
   };
+
+  function generateDefaultModules(classItem) {
+    return [
+      {
+        id: 1,
+        title: `Video: ${classItem.title || "Kelas Baru"}`,
+        type: "video",
+        duration: classItem.duration ? classItem.duration / 3 : 15,
+        completed: false,
+      },
+      {
+        id: 2,
+        title: `Rangkuman: ${classItem.title || "Kelas Baru"}`,
+        type: "summary",
+        duration: 10,
+        completed: false,
+      },
+      {
+        id: 3,
+        title: `Quiz: ${classItem.title || "Kelas Baru"}`,
+        type: "quiz",
+        questionCount: 10,
+        completed: false,
+      },
+    ];
+  }
 
   const paymentDetails = getPaymentDetails();
   const isPaymentPage = location.pathname === "/payment";
@@ -148,8 +177,7 @@ function PaymentType() {
 
   return (
     <>
-      {/* Timer Section - Matches Design Image */}
-      <div className=" h-[56px] bg-[#FEE8D2CC] border border-[#FFE5E5] rounded-lg ">
+      <div className="h-[56px] bg-[#FEE8D2CC] border border-[#FFE5E5] rounded-lg">
         <div className="flex justify-center">
           <div className="flex gap-3">
             <div className="flex mt-3 gap-3">
@@ -161,7 +189,6 @@ function PaymentType() {
       </div>
 
       <section className="relative sm:py-12 mx-10 sm:mx-64">
-        {/* Payment failed notification */}
         {paymentFailed && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg max-w-md text-center">
@@ -171,14 +198,11 @@ function PaymentType() {
           </div>
         )}
 
-        {/* Mobile Stepper */}
         <div className="sm:hidden flex items-center text-gray-400 mb-6">
-          {/* Step 1: Always completed on payment page */}
           <i className="ri-checkbox-circle-fill text-[30px] text-[#3ECF4C]"></i>
           <span className="text-black text-[12px] mr-2 my-auto">Pilih Metode</span>
           <div className="w-[44px] h-[3px] my-auto bg-[#3A354161]"></div>
 
-          {/* Step 2: Bayar */}
           {isPaymentPage ? (
             <i className="ri-radio-button-line text-[30px] text-[#3ECF4C]"></i>
           ) : isSuccessPage ? (
@@ -189,62 +213,13 @@ function PaymentType() {
           <span className={`text-[12px] mr-2 my-auto ${isPaymentPage ? "text-black" : isSuccessPage ? "text-black" : "text-gray-300"}`}>Bayar</span>
           <div className="w-[44px] h-[3px] bg-[#3A354161] my-auto"></div>
 
-          {/* Step 3: Selesai */}
           {isSuccessPage ? <i className="ri-radio-button-line text-[30px] text-[#3ECF4C]"></i> : <i className="ri-radio-button-line text-[30px] text-gray-300"></i>}
           <span className={`text-[12px] my-auto ${isSuccessPage ? "text-black" : "text-gray-300"}`}>Selesai</span>
         </div>
 
-        <div className="sm:hidden block w-full sm:w-[30%] py-5 order-1 sm:order-2">
-          <div className="bg-white py-5 rounded-lg border-2 border-gray-200 px-5 sticky top-20">
-            <img src={productData.image} alt={productData.title} className="w-full h-40 object-cover rounded-md mb-3" />
-            <p className="text-[20px] text-[#222325] font-bold">{productData.title}</p>
-            <div className="flex gap-2">
-              <p className="text-[19px] text-[#3ECF4C] font-semibold text-sm pt-4">{formatPrice(productData.basePrice * 1000).replace("Rp ", "Rp")}</p>
-              <p className="text-[23px] text-[#3A354161] font-semibold text-sm pt-4"></p>
-            </div>
-
-            <div className="text-gray-800 space-y-6 text-sm">
-              <div>
-                <h2 className="font-semibold text-base mb-3 pt-6">Kelas Ini Sudah Termasuk</h2>
-                <div className="grid grid-cols-2 gap-3 text-gray-600">
-                  <div className="flex items-center gap-2">
-                    <FileText size={18} />
-                    <span>Ujian Akhir</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Video size={18} />
-                    <span>49 Video</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <FileBadge size={18} />
-                    <span>7 Dokumen</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <BadgeCheck size={18} />
-                    <span>Sertifikat</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <FileSearch size={18} />
-                    <span>Pretest</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h2 className="font-semibold text-base mb-3">Bahasa Pengantar</h2>
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Globe size={18} />
-                  <span>Bahasa Indonesia</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div className="sm:flex sm:gap-10">
           <div className="w-full sm:w-[70%] py-5 order-2 sm:order-1">
-            {/* Payment Method Section */}
-            <div className=" bg-white py-5 rounded-lg border-2 border-gray-200 mb-6">
+            <div className="bg-white py-5 rounded-lg border-2 border-gray-200 mb-6">
               <h2 className="text-xl font-bold px-8 mb-6">Metode Pembayaran</h2>
 
               <div className="rounded-lg border-2 border-gray-200 mx-5 py-5">
@@ -266,8 +241,7 @@ function PaymentType() {
                 </div>
               </div>
 
-              {/* Order Summary */}
-              <div className=" py-5 ">
+              <div className="py-5">
                 <h2 className="text-lg font-semibold px-8 mb-4">Ringkasan Pesanan</h2>
 
                 <div className="px-8 space-y-4">
@@ -290,9 +264,6 @@ function PaymentType() {
                 </div>
 
                 <div className="px-8 mt-6 flex gap-3">
-                  {/* <button onClick={() => navigate("/order")} className="text-orange-500 font-medium text-sm">
-                    Ganti Metode Pembayaran
-                  </button> */}
                   <button onClick={() => navigate("/change-payment", { state })} className="w-full bg-white text-green-500 border-2 border-green-500 hover:bg-green-50 font-semibold py-3 rounded-lg transition">
                     Ganti Pembayaran
                   </button>
@@ -303,7 +274,6 @@ function PaymentType() {
               </div>
             </div>
 
-            {/* Payment Instructions - Placeholder */}
             <div className="bg-white py-5 rounded-lg border-2 border-gray-200">
               <h2 className="text-xl font-bold px-8 mb-6">Tata Cara Pembayaran</h2>
 
@@ -326,14 +296,12 @@ function PaymentType() {
             </div>
           </div>
 
-          {/* Sidebar - Desktop View */}
           <div className="hidden sm:block w-full sm:w-[30%] py-5 order-1 sm:order-2">
             <div className="bg-white py-5 rounded-lg border-2 border-gray-200 px-5 sticky top-20">
               <img src={productData.image} alt={productData.title} className="w-full h-40 object-cover rounded-md mb-3" />
               <p className="text-[20px] text-[#222325] font-bold">{productData.title}</p>
               <div className="flex gap-2">
                 <p className="text-[19px] text-[#3ECF4C] font-semibold text-sm pt-4">{formatPrice(productData.basePrice * 1000).replace("Rp ", "Rp")}</p>
-                <p className="text-[23px] text-[#3A354161] font-semibold text-sm pt-4"></p>
               </div>
 
               <div className="text-gray-800 space-y-6 text-sm">

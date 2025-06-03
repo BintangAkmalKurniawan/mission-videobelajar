@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchClasses, deleteClass } from "../../../../redux/classesSlice.js";
+import { fetchClasses, deleteClass, updateClassProgress } from "../../../../redux/classesSlice.js";
 
 const statusColor = {
   completed: "text-green-600 bg-green-100",
@@ -21,10 +22,29 @@ const ClassList = () => {
     dispatch(fetchClasses());
   }, [dispatch]);
 
+  // Process data with defaults
+  const processedData = data.map((item) => {
+    const totalModules = 60;
+    const completedModules = item.completedModules || 0;
+    const isCompleted = completedModules >= totalModules;
+
+    return {
+      ...item,
+      totalModules,
+      completedModules,
+      displayTitle: item.productName || item.title || "Kelas Belum Diberi Judul",
+      status: isCompleted ? "completed" : "ongoing",
+      statusModule: isCompleted ? "completed" : "ongoing",
+      instructorName: item.instructorName || "Instruktur",
+      image: item.image || "/avatar/satu.png",
+      progress: Math.round((completedModules / totalModules) * 100),
+    };
+  });
+
   // Filter data
-  const filteredData = data.filter((item) => {
+  const filteredData = processedData.filter((item) => {
     const matchesCategory = selectedCategory === "Semua Kelas" || item.status === selectedCategory;
-    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = item.displayTitle.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -32,15 +52,31 @@ const ClassList = () => {
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const currentItems = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const getStatusDisplay = (status) => {
-    switch (status) {
-      case "ongoing":
-        return "Sedang Berjalan";
-      case "completed":
-        return "Selesai";
-      default:
-        return status;
-    }
+  const navigate = useNavigate();
+
+  const handleViewDetails = (classData) => {
+    navigate(`/class/${classData.id}`, { state: { classData } });
+  };
+
+  const handleContinueLearning = (classItem) => {
+    const newCompletedModules = Math.min(classItem.completedModules + 1, classItem.totalModules);
+    const isCompleted = newCompletedModules >= classItem.totalModules;
+
+    const updatedClass = {
+      ...classItem,
+      completedModules: newCompletedModules,
+      status: isCompleted ? "completed" : "ongoing",
+      statusModule: isCompleted ? "completed" : "ongoing",
+      progress: Math.round((newCompletedModules / classItem.totalModules) * 100),
+    };
+
+    dispatch(updateClassProgress(updatedClass))
+      .then(() => {
+        navigate(`/class/${classItem.id}`, { state: { classData: updatedClass } });
+      })
+      .catch((err) => {
+        console.error("Gagal update progress:", err);
+      });
   };
 
   const handleDelete = (id) => {
@@ -84,46 +120,45 @@ const ClassList = () => {
           <i className="ri-search-line absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
         </div>
       </div>
-      {/* Daftar Kelas */}
-      // ... (import dan bagian awal komponen tetap sama)
+
+      {/* Class List */}
       {currentItems.length > 0 ? (
         currentItems.map((classItem) => {
           const isCompleted = classItem.status === "completed";
-          // Progress sudah dihitung di Redux slice
           const progress = classItem.progress;
 
           return (
             <div key={classItem.id} className="mt-4 bg-white border-2 border-gray-200 rounded-lg mb-4">
-              {/* Header dengan info modul dan status */}
+              {/* Header */}
               <div className="flex justify-between items-center bg-[#E2FCD933] px-3 py-2 border-b">
                 <p className="text-sm font-bold">
                   {classItem.completedModules} / {classItem.totalModules} Modul Terselesaikan
                 </p>
-                <span className={`text-sm px-2 py-1 rounded-full font-semibold ${isCompleted ? "bg-green-100 text-green-600" : "bg-yellow-100 text-yellow-600"}`}>{isCompleted ? "Selesai" : "Sedang Berjalan"}</span>
+                <span className={`text-sm px-2 py-1 rounded-full font-semibold ${statusColor[classItem.status]}`}>{isCompleted ? "Selesai" : "Sedang Berjalan"}</span>
               </div>
 
-              {/* Konten utama kelas */}
+              {/* Main class content */}
               <div className="flex gap-4 px-5 py-4">
                 <img src={classItem.image} alt={classItem.title} className="w-24 h-24 rounded" />
                 <div className="flex-1">
-                  <h2 className="text-lg font-semibold mt-1">{classItem.title}</h2>
+                  <h2 className="text-lg font-semibold mt-1">{classItem.displayTitle}</h2>
                   <p className="text-sm text-gray-500">Mulai transformasi dengan instruktur profesional, harga yang terjangkau, dan kurikulum terbaik</p>
                   <div className="flex items-center mt-2 text-sm text-gray-700 gap-2">
                     <span className="font-semibold">{classItem.instructorName}</span>
-                    <span>• {classItem.instructorJob}</span>
+                    <span>• {classItem.instructorJob || "Profesional"}</span>
                   </div>
                   <div className="flex items-center text-sm text-gray-600 mt-1 gap-4">
                     <span>
                       <i className="ri-book-line text-[20px]"></i> {classItem.totalModules} Modul
                     </span>
                     <span>
-                      <i className="ri-time-line text-[20px]"></i> {classItem.duration} Menit
+                      <i className="ri-time-line text-[20px]"></i> {classItem.duration || 0} Menit
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Progress bar dan aksi */}
+              {/* Progress bar and actions */}
               <div className="mt-2 flex items-center px-10 bg-[#E2FCD933] py-3 border-t justify-between">
                 <div className="flex items-center">
                   <p className="text-sm">
@@ -136,12 +171,13 @@ const ClassList = () => {
 
                 <div className="flex gap-2">
                   {isCompleted ? (
-                    <>
-                      <button className="border border-green-500 text-green-500 px-3 py-2 rounded-md text-sm font-medium">Unduh Sertifikat</button>
-                      <button className="bg-green-500 text-white px-3 py-2 rounded-md text-sm font-medium">Lihat Detail Kelas</button>
-                    </>
+                    <button onClick={() => handleViewDetails(classItem)} className="bg-green-500 text-white px-3 py-2 rounded-md text-sm font-medium">
+                      Lihat Detail Kelas
+                    </button>
                   ) : (
-                    <button className="bg-green-500 text-white px-3 py-2 rounded-md text-sm font-medium">Lanjutkan Pembelajaran</button>
+                    <button onClick={() => handleContinueLearning(classItem.id)} className="bg-green-500 text-white px-3 py-2 rounded-md text-sm font-medium">
+                      Lanjutkan Pembelajaran
+                    </button>
                   )}
                   <button onClick={() => handleDelete(classItem.id)} className="ml-2 text-red-500 hover:text-red-700">
                     <i className="ri-delete-bin-line"></i>
@@ -154,7 +190,7 @@ const ClassList = () => {
       ) : (
         <div className="text-center py-10 text-gray-500">Tidak ada data yang ditemukan</div>
       )}
-      // ... (bagian lainnya tetap sama)
+
       {/* Pagination */}
       {filteredData.length > 0 && (
         <div className="flex justify-center mt-10 mb-5 overflow-x-auto">

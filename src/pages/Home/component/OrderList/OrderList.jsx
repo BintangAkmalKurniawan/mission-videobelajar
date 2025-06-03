@@ -23,7 +23,6 @@ const OrderList = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(URL);
-        // Pastikan response.data adalah array
         if (!Array.isArray(response.data)) {
           throw new Error("Format data tidak valid");
         }
@@ -32,11 +31,15 @@ const OrderList = () => {
           id: item.id,
           invoice: item.invoice || `HEL/VI/${Math.floor(1000 + Math.random() * 9000)}`,
           time: item.time instanceof Date ? item.time : new Date(item.time || item.createdAt),
-          status: item.status || "ongoing",
-          title: item.productName || "Kelas Belum Diberi Judul",
+          status: item.status || (item.completed ? "completed" : "ongoing"),
+          title: item.productName || item.title || "Kelas Belum Diberi Judul",
           price: item.price || 0,
           image: item.image || "/avatar/satu.png",
           total_payment: item.totalPayment || item.price || 0,
+          totalModules: item.totalModules || 3,
+          completedModules: item.completedModules || 0,
+          instructorName: item.instructorName || "Instruktur",
+          progress: Math.round(((item.completedModules || 0) / (item.totalModules || 3)) * 100),
         }));
         setData(transformedData);
       } catch (err) {
@@ -50,14 +53,12 @@ const OrderList = () => {
     fetchData();
   }, []);
 
-  // Filter data
   const filteredData = data.filter((item) => {
     const matchesCategory = selectedCategory === "Semua Kelas" || item.status === selectedCategory;
     const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
-  // Pagination
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const currentItems = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
@@ -77,7 +78,6 @@ const OrderList = () => {
 
   return (
     <div className="bg-white sm:w-[100%] w-full h-full p-5 border-2 border-gray-200 rounded-lg">
-      {/* Search & Filter UI */}
       <div className="flex flex-col sm:flex-row gap-4 sm:items-center mb-4">
         <div className="flex sm:flex-nowrap gap-2 sm:gap-4 overflow-x-scroll">
           {navbar.map((item) => (
@@ -108,7 +108,6 @@ const OrderList = () => {
         </div>
       </div>
 
-      {/* Daftar Kelas */}
       {currentItems.length > 0 ? (
         currentItems.map((order) => (
           <div key={order.id} className="mt-4 bg-white border-2 border-gray-200 rounded-lg text-[15px] text-[#333333AD]">
@@ -150,7 +149,6 @@ const OrderList = () => {
         <div className="text-center py-10 text-gray-500">Tidak ada data yang ditemukan</div>
       )}
 
-      {/* Pagination */}
       {filteredData.length > 0 && (
         <div className="flex justify-center mt-10 mb-5 overflow-x-auto">
           <nav className="inline-flex rounded-md shadow-sm" aria-label="Pagination">
